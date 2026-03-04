@@ -41,7 +41,7 @@ public class MyDataUtil {
 
 
 
-    //transform little string (<=64 char) as utf8 bytes array of fixed size=32
+    //transform little string (<=64 char) as utf8 bytes array of fixed size=64
     public static byte[] utf8Buffer64FromLittleString(String s){
         byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
         //System.out.println("initial length:" + bytes.length);
