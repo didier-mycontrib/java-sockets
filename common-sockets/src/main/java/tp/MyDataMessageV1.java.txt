@@ -15,7 +15,7 @@ import java.util.Arrays;
 // "last_news" , 0 , 0
 // "average_double" , 4 , 8 , array of 4 doubles
 // ...
-public class MyDataMessage {
+public class MyDataMessageV1 {
     private String message; //partie principale du message véhiculée en utf8 sur tableau de taille 64
     private int n; //nombre d'éléments de l'éventuel tableau des données complémentaires
     private int s;// taille unitaire des éléments du tableau des données complémentaires
@@ -25,7 +25,7 @@ public class MyDataMessage {
     //construit et retourne la partie principale du message (message + n + s) sur 64 + 4 + 4 =72 octets
     public byte[] get_main_data(){
         byte[] mainData = new byte[64+4+4];
-        byte[] messageData = MyDataUtil.utf8Buffer64FromLittleString(this.message);
+        byte[] messageData = MyDataUtilV1.utf8Buffer64FromLittleString(this.message);
         for(int i=0;i<64;i++) mainData[i]=messageData[i];
         byte[] nData = ByteBuffer.allocate(4).putInt(n).array();
         for(int i=0;i<4;i++) mainData[i+64]=nData[i];
@@ -47,7 +47,7 @@ public class MyDataMessage {
     }
 
     public void buildMainMessageFromMainData(byte[] mainData){
-        this.message=MyDataUtil.stringFromUtf8Buffer64(mainData);//extraction du message depuis les 64 premiers octets
+        this.message= MyDataUtilV1.stringFromUtf8Buffer64(mainData);//extraction du message depuis les 64 premiers octets
         ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES);
         //read n = number of items in array:
         int delta=64;
@@ -67,18 +67,18 @@ public class MyDataMessage {
         //System.out.println("s="+s); //ok
     }
 
-    public MyDataMessage(String message, int n, int s, byte[] extra_data) {
+    public MyDataMessageV1(String message, int n, int s, byte[] extra_data) {
         this.message = message;
         this.n = n;
         this.s = s;
         this.extra_data = extra_data;
     }
 
-    public MyDataMessage(String message){
+    public MyDataMessageV1(String message){
         this(message,0,0,null);
     }
 
-    public MyDataMessage(){
+    public MyDataMessageV1(){
         this("");
     }
 
@@ -114,8 +114,8 @@ public class MyDataMessage {
         return this.n * this.s;
     }
 
-    public static MyDataMessage readFromInputStream(InputStream in){
-        MyDataMessage dataMessage = new MyDataMessage();
+    public static MyDataMessageV1 readFromInputStream(InputStream in){
+        MyDataMessageV1 dataMessage = new MyDataMessageV1();
         try {
             byte[] mainFirstPartOfData = in.readNBytes(72); //64+4+4=72 (message+n+s)
             if(mainFirstPartOfData.length==0){

@@ -6,7 +6,7 @@ import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 
 public class MyClientUDP {
-    final static int port = 9633;
+    final static int port = 9633;  //filtrage wireshark : udp.port==9633
     final static int TAILLE_BUFFER_RECEPTION = 1024;
 
     public static void main(String args[]) throws Exception {

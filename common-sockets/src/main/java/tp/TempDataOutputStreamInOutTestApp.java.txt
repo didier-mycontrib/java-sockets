@@ -1,0 +1,66 @@
+package tp;
+
+import java.io.*;
+
+public class TempDataOutputStreamInOutTestApp {
+
+    public static byte[] writeDoubleIntStringAsBinaryData(double d , int i , String s) throws IOException {
+        ByteArrayOutputStream baos =  new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        dos.writeDouble(d);
+        dos.writeInt(i);
+        dos.close();
+        dos.writeUTF(s);
+        //String s64 = String.format("%-64s",s);
+        //dos.writeUTF(s64); //writeUTF(s) écrit 2octets pour la taille de la chaine puis tous les caractères
+        byte[] buff = baos.toByteArray();
+        baos.close();
+        return buff;
+    }
+
+    public static byte[] writeDoubleIntStringAsBinaryDataV2(double d , int i , String s) throws IOException {
+        ByteArrayOutputStream baos =  new ByteArrayOutputStream();
+        MyDataUtilV1.writeDoubleAsBytes(d,baos);
+        MyDataUtilV1.writeIntegerAsBytes(i,baos);
+        baos.writeBytes(MyDataUtilV1.utf8Buffer64FromLittleString(s));
+        byte[] buff = baos.toByteArray();
+        baos.close();
+        return buff;
+    }
+
+    public static void readDoubleIntStringFromBinaryData(byte[] buff) throws IOException{
+        ByteArrayInputStream bios = new ByteArrayInputStream(buff);
+        DataInputStream dis = new DataInputStream(bios);
+        double d  = dis.readDouble();
+        int i = dis.readInt();
+        String s = dis.readUTF(); /*.stripTrailing();*/
+        dis.close();
+        bios.close();
+        System.out.println("d="+d + " i=" + i + " s="+s);
+    }
+
+    public static void readDoubleIntStringFromBinaryDataV2(byte[] buff) throws IOException{
+        ByteArrayInputStream bios = new ByteArrayInputStream(buff);
+        double d  = MyDataUtilV1.readDoubleFromBytes(bios);
+        int i = MyDataUtilV1.readIntegerFromBytes(bios);
+        String s = MyDataUtilV1.stringFromUtf8Buffer64(bios.readNBytes(64));
+        bios.close();
+        System.out.println("d="+d + " i=" + i + " s="+s);
+    }
+
+    public static void main(String[] args) throws Exception {
+        /*
+        String s = "abc";
+        String fls = String.format("%-64s",s);
+        System.out.println("fls.length=" + fls.length() + " fls=" + fls +  "*" );
+        String s2 = fls.stripTrailing();
+        System.out.println("s2.length=" + s2.length() + " s2=" + s2 +  "*" );
+        */
+
+        byte[] buff = writeDoubleIntStringAsBinaryData(12.5,12 , "_12_12_");
+        //byte[] buff = writeDoubleIntStringAsBinaryDataV2(12.5,12 , "_12_12_");
+        System.out.println("buff=" + buff + " of length=" + buff.length);
+        readDoubleIntStringFromBinaryData(buff);
+        //readDoubleIntStringFromBinaryDataV2(buff);
+    }
+}

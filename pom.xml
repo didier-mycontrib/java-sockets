@@ -19,6 +19,7 @@
     <module>common-sockets</module>
   	<module>cli-sockets</module>
   	<module>serv-sockets</module>
+       <module>p2p-sockets</module>
    </modules>
   
   

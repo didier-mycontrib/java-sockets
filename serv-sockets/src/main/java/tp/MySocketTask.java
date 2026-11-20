@@ -1,8 +1,8 @@
 package tp;
 
 import java.io.*;
-import java.net.InetAddress;
 import java.net.Socket;
+import java.time.LocalDateTime;
 
 
 public class MySocketTask implements Runnable {
@@ -22,26 +22,41 @@ public class MySocketTask implements Runnable {
 
             InputStream in = socketClient.getInputStream();
             OutputStream out = socketClient.getOutputStream();
+            DataInputStream dataIn = new DataInputStream(in);
+            DataOutputStream dataOut = new DataOutputStream(out);
 
 
             boolean endLoop=false;
             while(!endLoop) {
                 //request/response loop
-                MyDataMessage requestDataMessage = MyDataMessage.readFromInputStream(in);
-                String requestMessage = requestDataMessage.getMessage();
+                //MyDataMessageV1 requestDataMessage = MyDataMessageV1.readFromInputStream(in);
+                String requestMessage = null;
+                try {
+                    requestMessage = MySimpleMessage.readSimpleMessage(dataIn);
+                } catch (EndReadLoopException e) {
+                    endLoop=true;
+                }
                 byte[] responseData = null;
                 System.out.println("received requestMessage=" + requestMessage);
-                endLoop=!requestDataMessage.isOk();
-                switch (requestMessage) {
-                    case "average_double":
-                        double[] values = MyDataUtil.extractDoubleArrayFromExtraBytes(requestDataMessage.getExtra_data());
-                        responseData = MyResponseDataUtil.averageDoubleResponseMessageData(values);
-                        out.write(responseData);
-                        break;
+                if(requestMessage!=null)
+                  switch (requestMessage) {
 
+                    case "average_double":
+                        double[] values = MyMessageWithDoubleArray.readMessageData(dataIn);
+                        int n= values.length;
+                        double sum=0;
+                        for(int i=0;i<n;i++){
+                            sum+=values[i];
+                        }
+                        String averageResponseMsg = "for received array of double of size= " + n + " computed average=" + sum/n;
+                        MySimpleMessage.writeSimpleMessage(dataOut,averageResponseMsg);
+                        System.out.println("average_double response sent : "+averageResponseMsg);
+                        break;
                     case "last_news":
-                        responseData = MyResponseDataUtil.lastNewsResponseMessageData();
-                        out.write(responseData);
+                        String lastNewsResponseMsg = "current time (server side) is " + LocalDateTime.now().toString();
+                        MySimpleMessage.writeSimpleMessage(dataOut,lastNewsResponseMsg);
+                        System.out.println("last_news response sent : "+lastNewsResponseMsg);
+                        break;
                 }
             }
 

@@ -6,49 +6,29 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class MySocketClient {
-    static int port = 9632;
+    static int port = 9632;   //filtrage wireshark : tcp.port==9632
 
-    public static void send_last_news_message(Socket socket){
-        try {
-            InputStream in = socket.getInputStream();
-            OutputStream out = socket.getOutputStream();
+    public static void send_last_news_message(DataInputStream dataIn, DataOutputStream dataOut){
             //send request to server:
-            out.write(MyRequestDataUtil.lastNewsMessageData());
+            MySimpleMessage.writeSimpleMessage(dataOut,"last_news");
+            System.out.println("lastNews request sent , waiting for response ...");
             //waiting & retreive response:
-            MyDataMessage responseDataMessage = MyDataMessage.readFromInputStream(in);
-            System.out.println("responseMessage="+responseDataMessage.getMessage());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+            String lastNews = MySimpleMessage.readSimpleMessage(dataIn);
+            System.out.println("responseMessage (lastNews)="+lastNews);
     }
 
-    public static void send_average_double_request(Socket socket){
-        try {
-            InputStream in = socket.getInputStream();
-            OutputStream out = socket.getOutputStream();
+    public static void send_average_double_request(DataInputStream dataIn, DataOutputStream dataOut){
             //send request to server:
             double[] values= { 6.0, 8.0 , 10.0 , 12.0 , 14.0}; //expected average = 10
-            byte[] requestData=MyRequestDataUtil.averageDoubleMessage(values);
-            out.write(requestData);
+            MyMessageWithDoubleArray.writeMessageWithData(dataOut,"average_double",values);
             //waiting & retreive response:
-            MyDataMessage responseDataMessage = MyDataMessage.readFromInputStream(in);
-            System.out.println("responseMessage="+responseDataMessage.getMessage());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+            String averageResponseMessage = MySimpleMessage.readSimpleMessage(dataIn);
+            System.out.println("responseMessage (average of double array)="+averageResponseMessage);
     }
 
 
     public static void main(String[] args) {
-        /*
-        byte[]  bytes = MyDataUtil.utf8Buffer32FromLittleString("coucou");
-        String message = MyDataUtil.StringFromUtf8Buffer32(bytes);
-        System.out.println("message="+message);
-        */
-
-        String host = (args.length>0)?args[0]:"localhost";
+             String host = (args.length>0)?args[0]:"localhost";
         InetAddress serveur = null;
         try {
             serveur = InetAddress.getByName(host);
@@ -57,8 +37,12 @@ public class MySocketClient {
         }
 
         try  (Socket socket = new Socket(serveur, port)){
-            send_last_news_message(socket);
-            send_average_double_request(socket);
+            InputStream in = socket.getInputStream();
+            DataInputStream dataIn = new DataInputStream(in);
+            OutputStream out = socket.getOutputStream();
+            DataOutputStream dataOut = new DataOutputStream(out);
+            send_last_news_message(dataIn,dataOut);
+            send_average_double_request(dataIn,dataOut);
         } catch (Exception e) {
             e.printStackTrace();
         } //try with auto_closeable resource=socket .
